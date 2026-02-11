@@ -34,11 +34,13 @@ client.once("ready", async () => {
 
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
+  const GUILD_ID = "1392713967926906972"; // ✅ Tu servidor
+
   try {
-    console.log("🔄 Registrando comandos slash...");
-    
+    console.log("🔄 Registrando comandos slash en el servidor...");
+
     await rest.put(
-      Routes.applicationCommands(client.user.id), 
+      Routes.applicationGuildCommands(client.user.id, GUILD_ID),
       { body: commands }
     );
 
@@ -74,4 +76,4 @@ client.on("interactionCreate", async interaction => {
   }
 });
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN); 

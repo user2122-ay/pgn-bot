@@ -238,7 +238,7 @@ async button(interaction) {
   /* 🔒 CERRAR TICKET */
   /* ============================= */
 
-  if (interaction.customId === "cerrar_ticket") {
+if (interaction.customId === "cerrar_ticket") {
 
     if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
       return interaction.reply({
@@ -256,4 +256,5 @@ async button(interaction) {
       canal.delete().catch(() => {});
     }, 5000);
   }
-        }
+  }
+};

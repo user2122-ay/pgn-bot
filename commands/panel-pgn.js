@@ -176,54 +176,84 @@ Indique número de expediente o datos relevantes.`;
       ephemeral: true
     });
   },
+// 🔘 BOTONES
+async button(interaction) {
 
-  // 🔘 BOTONES
-  async button(interaction) {
+  const canal = interaction.channel;
 
-    // 🔎 RECLAMAR
-    if (interaction.customId === "reclamar_ticket") {
+  /* ============================= */
+  /* 🔎 RECLAMAR TICKET */
+  /* ============================= */
 
-      if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
-        return interaction.reply({
-          content: "⛔ Solo un fiscal puede reclamar este ticket.",
-          ephemeral: true
-        });
-      }
+  if (interaction.customId === "reclamar_ticket") {
 
-      await interaction.channel.permissionOverwrites.set([
-        {
-          id: interaction.guild.id,
-          deny: [PermissionsBitField.Flags.ViewChannel]
-        },
-        {
-          id: interaction.user.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages
-          ]
-        },
-        {
-          id: interaction.member.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages
-          ]
-        }
-      ]);
-
-      await interaction.reply({
-        content: `✅ Ticket reclamado por ${interaction.member}.`
+    if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
+      return interaction.reply({
+        content: "⛔ Solo un fiscal puede reclamar este ticket.",
+        flags: 64
       });
     }
 
-    // 🔒 CERRAR
-    if (interaction.customId === "cerrar_ticket") {
+    // Buscar quién abrió el ticket (primer miembro que no sea fiscal)
+    const permisos = canal.permissionOverwrites.cache;
 
-      await interaction.reply("🔒 Cerrando ticket en 5 segundos...");
+    const creador = permisos.find(p =>
+      p.type === 1 &&
+      p.allow.has(PermissionsBitField.Flags.ViewChannel) &&
+      p.id !== interaction.user.id
+    );
 
-      setTimeout(() => {
-        interaction.channel.delete().catch(() => {});
-      }, 5000);
+    if (!creador) {
+      return interaction.reply({
+        content: "❌ No se pudo identificar al creador del ticket.",
+        flags: 64
+      });
     }
+
+    // ❌ Quitar acceso al rol fiscal general
+    await canal.permissionOverwrites.edit(ROL_FISCAL, {
+      ViewChannel: false
+    });
+
+    // ❌ Quitar acceso al usuario que abrió el ticket
+    await canal.permissionOverwrites.edit(creador.id, {
+      ViewChannel: false
+    });
+
+    // ✅ Dejar solo al fiscal que reclamó
+    await canal.permissionOverwrites.edit(interaction.user.id, {
+      ViewChannel: true,
+      SendMessages: true
+    });
+
+    await interaction.reply({
+      content: `✅ Ticket reclamado por ${interaction.user}.`,
+      flags: 64
+    });
+
+    await canal.send(`👨‍⚖️ Este ticket ahora está siendo gestionado por ${interaction.user}.`);
   }
-};
+
+  /* ============================= */
+  /* 🔒 CERRAR TICKET */
+  /* ============================= */
+
+  if (interaction.customId === "cerrar_ticket") {
+
+    if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
+      return interaction.reply({
+        content: "⛔ Solo un fiscal puede cerrar este ticket.",
+        flags: 64
+      });
+    }
+
+    await interaction.reply({
+      content: "🔒 Cerrando ticket en 5 segundos...",
+      flags: 64
+    });
+
+    setTimeout(() => {
+      canal.delete().catch(() => {});
+    }, 5000);
+  }
+        }

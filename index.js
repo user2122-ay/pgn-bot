@@ -9,10 +9,7 @@ const {
 } = require("discord.js");
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers // 👈 NECESARIO para permisos y roles
-  ]
+  intents: [GatewayIntentBits.Guilds]
 });
 
 client.commands = new Collection();
@@ -106,23 +103,6 @@ client.on("interactionCreate", async interaction => {
           ephemeral: true
         });
       }
-    }
-  }
-
-  /* ---------- BOTONES (Reclamar / Cerrar Ticket) ---------- */
-  if (interaction.isButton()) {
-
-    const command = client.commands.get("panel-pgn");
-    if (!command || !command.button) return;
-
-    try {
-      await command.button(interaction);
-    } catch (error) {
-      console.error("❌ Error en botón:", error);
-      await interaction.reply({
-        content: "❌ Error procesando el botón.",
-        ephemeral: true
-      });
     }
   }
 

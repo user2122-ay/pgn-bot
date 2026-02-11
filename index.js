@@ -9,7 +9,10 @@ const {
 } = require("discord.js");
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers
+  ]
 });
 
 client.commands = new Collection();
@@ -40,7 +43,6 @@ client.once("ready", async () => {
   console.log(`✅ Bot conectado como ${client.user.tag}`);
 
   const commands = client.commands.map(cmd => cmd.data.toJSON());
-
   const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
 
   try {
@@ -73,16 +75,15 @@ client.on("interactionCreate", async interaction => {
     } catch (error) {
       console.error(error);
 
+      const errorMessage = {
+        content: "❌ Hubo un error ejecutando este comando.",
+        flags: 64
+      };
+
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({
-          content: "❌ Hubo un error ejecutando este comando.",
-          ephemeral: true
-        });
+        await interaction.followUp(errorMessage);
       } else {
-        await interaction.reply({
-          content: "❌ Hubo un error ejecutando este comando.",
-          ephemeral: true
-        });
+        await interaction.reply(errorMessage);
       }
     }
   }
@@ -100,9 +101,26 @@ client.on("interactionCreate", async interaction => {
         console.error("❌ Error en select menu:", error);
         await interaction.reply({
           content: "❌ Error procesando la solicitud.",
-          ephemeral: true
+          flags: 64
         });
       }
+    }
+  }
+
+  /* ---------- BOTONES (Reclamar / Cerrar Ticket) ---------- */
+  if (interaction.isButton()) {
+
+    const command = client.commands.get("panel-pgn");
+    if (!command || !command.button) return;
+
+    try {
+      await command.button(interaction);
+    } catch (error) {
+      console.error("❌ Error en botón:", error);
+      await interaction.reply({
+        content: "❌ Error procesando el botón.",
+        flags: 64
+      });
     }
   }
 
@@ -112,4 +130,4 @@ client.on("interactionCreate", async interaction => {
 /* 🔹 LOGIN */
 /* ============================= */
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN); 

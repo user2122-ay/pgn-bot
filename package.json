@@ -1,12 +1,12 @@
 {
-  "name": "pgn-bot",
+  "name": "bot-pgn",
   "version": "1.0.0",
-  "description": "Bot PGN",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
   }
 }

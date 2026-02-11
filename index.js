@@ -99,10 +99,17 @@ client.on("interactionCreate", async interaction => {
         await command.select(interaction);
       } catch (error) {
         console.error("❌ Error en select menu:", error);
-        await interaction.reply({
+
+        const errorMessage = {
           content: "❌ Error procesando la solicitud.",
           flags: 64
-        });
+        };
+
+        if (interaction.replied || interaction.deferred) {
+          await interaction.followUp(errorMessage);
+        } else {
+          await interaction.reply(errorMessage);
+        }
       }
     }
   }
@@ -117,10 +124,17 @@ client.on("interactionCreate", async interaction => {
       await command.button(interaction);
     } catch (error) {
       console.error("❌ Error en botón:", error);
-      await interaction.reply({
+
+      const errorMessage = {
         content: "❌ Error procesando el botón.",
         flags: 64
-      });
+      };
+
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp(errorMessage);
+      } else {
+        await interaction.reply(errorMessage);
+      }
     }
   }
 
@@ -130,4 +144,4 @@ client.on("interactionCreate", async interaction => {
 /* 🔹 LOGIN */
 /* ============================= */
 
-client.login(process.env.TOKEN); 
+client.login(process.env.TOKEN);

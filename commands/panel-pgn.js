@@ -16,6 +16,10 @@ module.exports = {
     .setName("panel-pgn")
     .setDescription("Enviar panel oficial de atención PGN"),
 
+  /* ============================= */
+  /* 🔹 COMANDO PRINCIPAL */
+  /* ============================= */
+
   async execute(interaction) {
 
     const embed = new EmbedBuilder()
@@ -63,7 +67,7 @@ module.exports = {
 
     await interaction.reply({
       content: "📌 Panel enviado correctamente.",
-      ephemeral: true
+      flags: 64
     });
 
     await interaction.channel.send({
@@ -72,9 +76,15 @@ module.exports = {
     });
   },
 
+  /* ============================= */
+  /* 🔹 CREAR TICKET */
+  /* ============================= */
+
   async select(interaction) {
 
     const tipo = interaction.values[0];
+
+    await interaction.deferReply({ flags: 64 });
 
     const canal = await interaction.guild.channels.create({
       name: `pgn-${interaction.user.username}`,
@@ -101,43 +111,30 @@ module.exports = {
       ]
     });
 
-    let contenido = "";
+    let contenido = "Explique su solicitud.";
 
     if (tipo === "denuncia") {
       contenido = `## 📄 Plantilla de Denuncia
 
-### 👤 Datos del denunciante
 Nombre:
 Cédula:
 Contacto:
 
-### 🕵️ Datos del denunciado
-Nombre:
-Cargo:
+Descripción de los hechos:
 
-### 📖 Descripción de los hechos
-Explique detalladamente lo ocurrido.
-
-### 📂 Pruebas
-Adjunte evidencias aquí.`;
+Pruebas:`;
     }
 
     if (tipo === "asistencia") {
-      contenido = `⚖️ Solicitud de Asistencia Fiscal
-
-Explique su situación para recibir orientación.`;
+      contenido = `⚖️ Solicitud de Asistencia Fiscal\n\nExplique su situación.`;
     }
 
     if (tipo === "queja") {
-      contenido = `🛡️ Queja contra funcionario
-
-Indique nombre y describa los hechos.`;
+      contenido = `🛡️ Queja contra funcionario\n\nDescriba los hechos.`;
     }
 
     if (tipo === "seguimiento") {
-      contenido = `📑 Seguimiento de caso
-
-Indique número de expediente o datos relevantes.`;
+      contenido = `📑 Seguimiento de caso\n\nIndique número de expediente.`;
     }
 
     const embedTicket = new EmbedBuilder()
@@ -150,7 +147,6 @@ Indique número de expediente o datos relevantes.`;
       .setColor(0x2c3e50)
       .setTimestamp();
 
-    // 🔘 BOTONES
     const botones = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("reclamar_ticket")
@@ -171,90 +167,68 @@ Indique número de expediente o datos relevantes.`;
 
     await canal.send(contenido);
 
-    await interaction.reply({
-      content: "✅ Tu ticket ha sido creado correctamente.",
-      ephemeral: true
+    await interaction.editReply({
+      content: "✅ Tu ticket ha sido creado correctamente."
     });
   },
-// 🔘 BOTONES
-async button(interaction) {
-
-  const canal = interaction.channel;
 
   /* ============================= */
-  /* 🔎 RECLAMAR TICKET */
+  /* 🔹 BOTONES */
   /* ============================= */
 
-  if (interaction.customId === "reclamar_ticket") {
+  async button(interaction) {
 
-    if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
-      return interaction.reply({
-        content: "⛔ Solo un fiscal puede reclamar este ticket.",
+    const canal = interaction.channel;
+
+    /* 🔎 RECLAMAR TICKET */
+    if (interaction.customId === "reclamar_ticket") {
+
+      if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
+        return interaction.reply({
+          content: "⛔ Solo un fiscal puede reclamar este ticket.",
+          flags: 64
+        });
+      }
+
+      // Quitar acceso al rol fiscal general
+      await canal.permissionOverwrites.edit(ROL_FISCAL, {
+        ViewChannel: false
+      });
+
+      // Asegurar acceso al fiscal que reclamó
+      await canal.permissionOverwrites.edit(interaction.user.id, {
+        ViewChannel: true,
+        SendMessages: true
+      });
+
+      await interaction.reply({
+        content: `✅ Ticket reclamado por ${interaction.user}.`,
         flags: 64
       });
+
+      await canal.send(
+        `👨‍⚖️ Este ticket ahora está siendo gestionado por ${interaction.user}.`
+      );
     }
 
-    // Buscar quién abrió el ticket (primer miembro que no sea fiscal)
-    const permisos = canal.permissionOverwrites.cache;
+    /* 🔒 CERRAR TICKET */
+    if (interaction.customId === "cerrar_ticket") {
 
-    const creador = permisos.find(p =>
-      p.type === 1 &&
-      p.allow.has(PermissionsBitField.Flags.ViewChannel) &&
-      p.id !== interaction.user.id
-    );
+      if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
+        return interaction.reply({
+          content: "⛔ Solo un fiscal puede cerrar este ticket.",
+          flags: 64
+        });
+      }
 
-    if (!creador) {
-      return interaction.reply({
-        content: "❌ No se pudo identificar al creador del ticket.",
+      await interaction.reply({
+        content: "🔒 Cerrando ticket en 5 segundos...",
         flags: 64
       });
+
+      setTimeout(() => {
+        canal.delete().catch(() => {});
+      }, 5000);
     }
-
-    // ❌ Quitar acceso al rol fiscal general
-    await canal.permissionOverwrites.edit(ROL_FISCAL, {
-      ViewChannel: false
-    });
-
-    // ❌ Quitar acceso al usuario que abrió el ticket
-    await canal.permissionOverwrites.edit(creador.id, {
-      ViewChannel: false
-    });
-
-    // ✅ Dejar solo al fiscal que reclamó
-    await canal.permissionOverwrites.edit(interaction.user.id, {
-      ViewChannel: true,
-      SendMessages: true
-    });
-
-    await interaction.reply({
-      content: `✅ Ticket reclamado por ${interaction.user}.`,
-      flags: 64
-    });
-
-    await canal.send(`👨‍⚖️ Este ticket ahora está siendo gestionado por ${interaction.user}.`);
-  }
-
-  /* ============================= */
-  /* 🔒 CERRAR TICKET */
-  /* ============================= */
-
-if (interaction.customId === "cerrar_ticket") {
-
-    if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
-      return interaction.reply({
-        content: "⛔ Solo un fiscal puede cerrar este ticket.",
-        flags: 64
-      });
-    }
-
-    await interaction.reply({
-      content: "🔒 Cerrando ticket en 5 segundos...",
-      flags: 64
-    });
-
-    setTimeout(() => {
-      canal.delete().catch(() => {});
-    }, 5000);
-  }
   }
 };

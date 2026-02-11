@@ -3,6 +3,8 @@ const {
   EmbedBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ChannelType,
   PermissionsBitField
 } = require("discord.js");
@@ -142,14 +144,29 @@ Indique número de expediente o datos relevantes.`;
       .setTitle("📂 Ticket PGN Abierto")
       .setDescription(
         `👤 Usuario: ${interaction.user}\n` +
-        `📌 Tipo: ${tipo}`
+        `📌 Tipo: ${tipo}\n\n` +
+        "Use los botones para gestionar el ticket."
       )
       .setColor(0x2c3e50)
       .setTimestamp();
 
+    // 🔘 BOTONES
+    const botones = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("reclamar_ticket")
+        .setLabel("🔎 Reclamar Ticket")
+        .setStyle(ButtonStyle.Primary),
+
+      new ButtonBuilder()
+        .setCustomId("cerrar_ticket")
+        .setLabel("🔒 Cerrar Ticket")
+        .setStyle(ButtonStyle.Danger)
+    );
+
     await canal.send({
       content: `<@&${ROL_FISCAL}>`,
-      embeds: [embedTicket]
+      embeds: [embedTicket],
+      components: [botones]
     });
 
     await canal.send(contenido);
@@ -158,5 +175,55 @@ Indique número de expediente o datos relevantes.`;
       content: "✅ Tu ticket ha sido creado correctamente.",
       ephemeral: true
     });
+  },
+
+  // 🔘 BOTONES
+  async button(interaction) {
+
+    // 🔎 RECLAMAR
+    if (interaction.customId === "reclamar_ticket") {
+
+      if (!interaction.member.roles.cache.has(ROL_FISCAL)) {
+        return interaction.reply({
+          content: "⛔ Solo un fiscal puede reclamar este ticket.",
+          ephemeral: true
+        });
+      }
+
+      await interaction.channel.permissionOverwrites.set([
+        {
+          id: interaction.guild.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages
+          ]
+        },
+        {
+          id: interaction.member.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages
+          ]
+        }
+      ]);
+
+      await interaction.reply({
+        content: `✅ Ticket reclamado por ${interaction.member}.`
+      });
+    }
+
+    // 🔒 CERRAR
+    if (interaction.customId === "cerrar_ticket") {
+
+      await interaction.reply("🔒 Cerrando ticket en 5 segundos...");
+
+      setTimeout(() => {
+        interaction.channel.delete().catch(() => {});
+      }, 5000);
+    }
   }
 };

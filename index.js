@@ -151,4 +151,3 @@ client.on("interactionCreate", async interaction => {
 /* ============================= */
 
 client.login(process.env.TOKEN);
-npm install express

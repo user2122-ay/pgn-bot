@@ -3,82 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PGN - Sistema Oficial</title>
+  <title>PGN - Panel</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f6fa;
-      color: #2c3e50;
-      margin: 0;
-      padding: 0;
-    }
-
-    header {
-      background-color: #1f2a44;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-
-    main {
-      padding: 20px;
-    }
-
-    h1 {
-      margin-bottom: 10px;
-    }
-
-    .roles {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .role {
-      padding: 10px 20px;
-      background-color: #3498db;
-      color: white;
-      border-radius: 5px;
-      text-align: center;
-      flex: 1;
-    }
-
-    .cases {
-      margin-top: 20px;
-    }
-
-    .case {
-      padding: 10px;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      background-color: #ecf0f1;
-    }
+    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+    h1 { color: #1f2a44; }
+    button { padding: 10px 20px; margin: 5px; }
   </style>
 </head>
 <body>
+  <h1>📌 Panel de Atención PGN</h1>
 
-  <header>
-    <h1>⚖️ Procuraduría General de la Nación</h1>
-    <p>Sistema Oficial de Gestión de Casos</p>
-  </header>
+  <p>Seleccione el tipo de trámite:</p>
 
-  <main>
-    <h2>Roles disponibles</h2>
-    <div class="roles">
-      <div class="role">Fiscalía</div>
-      <div class="role">Procurador</div>
-      <div class="role">Informativa</div>
-      <div class="role">Archivador</div>
-    </div>
+  <button onclick="alert('Denuncia administrativa')">Denuncia administrativa</button>
+  <button onclick="alert('Apelar sanción administrativa')">Apelar sanción administrativa</button>
+  <button onclick="alert('Asesoría legal')">Asesoría legal</button>
+  <button onclick="alert('Asistencia administrativa')">Asistencia administrativa</button>
+  <button onclick="alert('Denuncia inconstitucional')">Denuncia inconstitucional</button>
 
-    <h2>Casos asignados</h2>
-    <div class="cases">
-      <div class="case">Caso #1 - Denuncia administrativa</div>
-      <div class="case">Caso #2 - Apelar sanción administrativa</div>
-      <div class="case">Caso #3 - Asesoría legal</div>
-    </div>
-  </main>
+  <p>⚖️ Roles:</p>
+  <ul>
+    <li>Fiscalía</li>
+    <li>Procurador</li>
+    <li>Informativa</li>
+    <li>Archivador</li>
+  </ul>
 
 </body>
 </html>

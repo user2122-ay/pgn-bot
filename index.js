@@ -48,8 +48,12 @@ client.once("ready", async () => {
   try {
     console.log("🔄 Registrando comandos slash...");
 
+    // ✅ REGISTRO INSTANTÁNEO EN TU SERVIDOR
     await rest.put(
-      Routes.applicationCommands(client.user.id),
+      Routes.applicationGuildCommands(
+        client.user.id,
+        "1392713967926906972"
+      ),
       { body: commands }
     );
 
@@ -88,53 +92,55 @@ client.on("interactionCreate", async interaction => {
     }
   }
 
-  /* ---------- Select Menu (Panel PGN) ---------- */
+  /* ---------- SELECT MENUS ---------- */
   if (interaction.isStringSelectMenu()) {
-    if (interaction.customId === "pgn_panel_select") {
 
+    // Panel PGN
+    if (interaction.customId === "pgn_panel_select") {
       const command = client.commands.get("panel-pgn");
       if (!command || !command.select) return;
+      return command.select(interaction);
+    }
 
-      try {
-        await command.select(interaction);
-      } catch (error) {
-        console.error("❌ Error en select menu:", error);
-
-        const errorMessage = {
-          content: "❌ Error procesando la solicitud.",
-          flags: 64
-        };
-
-        if (interaction.replied || interaction.deferred) {
-          await interaction.followUp(errorMessage);
-        } else {
-          await interaction.reply(errorMessage);
-        }
-      }
+    // Panel Administrativo
+    if (interaction.customId === "panel_admin_select") {
+      const command = client.commands.get("panel-administrativo");
+      if (!command || !command.select) return;
+      return command.select(interaction);
     }
   }
 
-  /* ---------- BOTONES (Reclamar / Cerrar Ticket) ---------- */
+  /* ---------- BOTONES (Reclamar / Cerrar) ---------- */
   if (interaction.isButton()) {
 
-    const command = client.commands.get("panel-pgn");
-    if (!command || !command.button) return;
+    // Primero intenta con panel-pgn
+    let command = client.commands.get("panel-pgn");
 
-    try {
-      await command.button(interaction);
-    } catch (error) {
-      console.error("❌ Error en botón:", error);
+    if (command && command.button) {
+      try {
+        return command.button(interaction);
+      } catch (error) {
+        console.error("❌ Error en botón:", error);
+      }
+    }
 
-      const errorMessage = {
+    // Luego intenta con panel-administrativo
+    command = client.commands.get("panel-administrativo");
+
+    if (command && command.button) {
+      try {
+        return command.button(interaction);
+      } catch (error) {
+        console.error("❌ Error en botón:", error);
+      }
+    }
+
+    // Error general
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
         content: "❌ Error procesando el botón.",
         flags: 64
-      };
-
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp(errorMessage);
-      } else {
-        await interaction.reply(errorMessage);
-      }
+      });
     }
   }
 
